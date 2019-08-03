@@ -1,0 +1,17 @@
+{
+  "name": "greeter-bot",
+  "version": "1.0.0",
+  "description": "Procrastibot",
+  "main": "bot.js",
+  "author": "Thompson Plyler",
+  "dependencies": {
+    "discord.io": "^2.5.3",
+    "discord.js": "^11.5.1",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
+}
