@@ -33,17 +33,28 @@ const timerCommand = (arguments, receivedMessage) => {
 
 
     if (arguments.length > 0) {
-        fetch(`http://localhost:3000/api/v1/timers/?summoner_name=${arguments}`, {
+        fetch(`http://localhost:3000/api/v1/timer/?summoner_name=${arguments}`, {
                 method: "POST"
             })
             .then(r => r.json())
-            .then(response => receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response}.`))
+            .then(response => {
+                receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response[1]}.\n${arguments} has won ${winCount(response[0])}% of total games played today.`)
+            }
+            )
         // receivedMessage.channel.send(`You have supplied ${arguments} as an argument`)
     } else {
         receivedMessage.channel.send("The command was received, but this command requires an argument to function.")
     }
 }
 
+const winCount = (data) =>{
+    const gameTotal = data.length
+    const wonGames = data.filter(game => game=="Win").length
+    const percentage = wonGames/gameTotal
+
+    return percentage*100
+
+}
 
 // Get your bot's secret token from:
 // https://discordapp.com/developers/applications/
