@@ -52,7 +52,7 @@ const winCount = (data) =>{
     const wonGames = data.filter(game => game=="Win").length
     const percentage = wonGames/gameTotal
 
-    return percentage*100
+    return Math.floor(percentage*100)
 
 }
 
