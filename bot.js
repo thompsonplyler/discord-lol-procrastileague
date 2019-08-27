@@ -1,5 +1,7 @@
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const client = new Discord.Client();
 
@@ -24,35 +26,49 @@ const processCommand = (receivedMessage) => {
 
     if (primaryCommand == "timer") {
         timerCommand(arguments, receivedMessage)
-    } else {
+    } 
+    else {
         receivedMessage.channel.send("I don't understand the command. Try `$timer`.")
     }
 }
 
 const timerCommand = (arguments, receivedMessage) => {
-
+    
 
     if (arguments.length > 0) {
-        fetch(`http://localhost:3000/api/v1/timer/?summoner_name=${arguments}`, {
+        fetch(`http://localhost:3001/api/v1/timer/?summoner_name=${arguments}`, {
                 method: "POST"
             })
             .then(r => r.json())
             .then(response => {
-                receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response[1]}.\n${arguments} has won ${winCount(response[0])}% of total games played today.`)
+                
+                envCheck()
+                
+                if (response["status"] === 500){
+                    return receivedMessage.channel.send("Your request was refused by Riot's API. This is probably because my developer key expired. Please contact <@230371156111130624> about resolving this.")
+                } 
+                else {
+                    return receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response[1]}.\n${arguments} has won ${winCount(response[0])}% of total games played today.`)
+                }
+            
             }
             )
-        // receivedMessage.channel.send(`You have supplied ${arguments} as an argument`)
-    } else {
+            .catch(e=>console.log("Got an error."))
+    } 
+    else {
         receivedMessage.channel.send("The command was received, but this command requires an argument to function.")
     }
 }
 
+const envCheck = () => {
+    console.log(process.env.BOT_CODE)
+}
 const winCount = (data) =>{
     const gameTotal = data.length
     const wonGames = data.filter(game => game=="Win").length
     const percentage = wonGames/gameTotal
 
-    return Math.floor(percentage*100)
+    return (percentage) ? Math.floor(percentage*100) : "0"
 
 }
 
