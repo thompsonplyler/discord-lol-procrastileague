@@ -1,58 +1,191 @@
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
+const moment = require('moment');
 
 const client = new Discord.Client();
 
 client.on('message', (receivedMessage) => {
-    if (receivedMessage.author == client.user) { // Prevent bot from responding to its own messages
-        return
-    }
+  if (receivedMessage.author == client.user) { // Prevent bot from responding to its own messages
+    return
+  }
 
-    if (receivedMessage.content.startsWith("$")) {
-        processCommand(receivedMessage)
-    }
+  if (receivedMessage.content.startsWith("$")) {
+    processCommand(receivedMessage)
+  }
 })
 
 const processCommand = (receivedMessage) => {
-    let fullCommand = receivedMessage.content.substr(1) // Remove the leading exclamation mark
-    let splitCommand = fullCommand.split(" ") // Split the message up in to pieces for each space
-    let primaryCommand = splitCommand[0] // The first word directly after the exclamation is the command
-    let arguments = splitCommand.slice(1) // All other words are arguments/parameters/options for the command
+  const fullCommand = receivedMessage.content.substr(1); // Remove the leading exclamation mark
+  const splitCommand = fullCommand.split(' '); // Split the message up in to pieces for each space
+  const primaryCommand = splitCommand[0];
+  let firstArgument = splitCommand[1]; // The first word directly after the exclamation is the command
+  let secondArgument = splitCommand.slice(2); // All other words are arguments/parameters/options for the command
 
-    console.log("Command received: " + primaryCommand)
-    console.log("Arguments: " + arguments) // There may not be any arguments
+//   if (firstArgument !== "na" || firstArgument != "ru" || firstArgument !== "euw" || firstArgument !== "lan" || firstArgument !== "las" || firstArgument !== "kr" || firstArgument !== "oce" || firstArgument !== "jp" || firstArgument !== "br" || firstArgument !== "eune"){
+//     secondArgument = firstArgument
+//     firstArgument = "na"
+//     } else{
+//     firstArgument = firstArgument
+//     }
 
-    if (primaryCommand == "timer") {
-        timerCommand(arguments, receivedMessage)
-    } else {
-        receivedMessage.channel.send("I don't understand the command. Try `$timer`.")
-    }
+  console.log("Command received: " + primaryCommand)
+  console.log("Region: " + firstArgument) // There may not be any arguments
+  console.log("Argument:" + secondArgument)
+
+  if (primaryCommand == "timer") {
+    timerCommand(firstArgument, secondArgument, receivedMessage)
+  } 
+  else if (primaryCommand == "moment") {
+      momentCommand()
+  }
+      else {
+    receivedMessage.channel.send("I don't understand the command. Try `$timer`.")
+  }
 }
 
-const timerCommand = (arguments, receivedMessage) => {
+const regionRetriever = (data) => {
+        
+}
 
+const momentCommand = (value) => {
+    const now = moment()
+    let day = now.day()+value
+    switch (day) {
+        case 0: 
+            day = "Sunday"
+            break;
+        case 1: 
+            day = "Monday"
+            break;
+        case 2: 
+            day = "Tuesday"
+            break;        
+        case 3: 
+            day = "Wednesday"
+            break;          
+        case 4: 
+            day = "Thursday"
+            break;          
+        case 5: 
+            day = "Friday"
+            break;                        
+        default: 
+            day= "Saturday"
+    }
+    return day
+}
 
-    if (arguments.length > 0) {
-        fetch(`http://localhost:3000/api/v1/timer/?summoner_name=${arguments}`, {
-                method: "POST"
-            })
-            .then(r => r.json())
-            .then(response => {
-                receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response[1]}.\n${arguments} has won ${winCount(response[0])}% of total games played today.`)
-            }
-            )
+const timerCommand = (region, argument, receivedMessage) => {
+    argument = encodeURIComponent(argument)
+    
+    if (argument.length > 0) {
+        fetch(`http://localhost:3001/api/v1/timer/?summoner_name=${argument}&region=${region}`, {
+            method: "POST"
+        })
+        .then(r => r.json())
+        .then(response => {
+            argument = decodeURIComponent(argument)
+            responseHandler(response, receivedMessage, argument)
+            // receivedMessage.channel.send(`${arguments} has played League of Legends today for ${response[1]}.\n${arguments} has won ${winCount(response[0])}% of total games played today.`)
+        }
+        )
+        .catch(error=>console.log("This is the error you received: "+ error))
         // receivedMessage.channel.send(`You have supplied ${arguments} as an argument`)
     } else {
         receivedMessage.channel.send("The command was received, but this command requires an argument to function.")
     }
 }
 
-const winCount = (data) =>{
-    const gameTotal = data.length
-    const wonGames = data.filter(game => game=="Win").length
-    const percentage = wonGames/gameTotal
+const responseHandler = (data, receivedMessage, argument) => {
+    // data.today, data.minus_one, data.minus_two through data.minus_six
+    // handle today:
+    if (data.grand_total_time === "00 hours 00 minutes and 00 seconds"){
+        receivedMessage.channel.send(`**Weekly Results for Summoner:** ${argument}\nThis summoner hasn't played any games this week.`)    
+    }
+    else{
+        receivedMessage.channel.send(
+            `**Weekly Results for Summoner:** ${argument}\n${handleToday(data)}\n${handleYesterday(data)}\n${handleMinusTwo(data)}\n${handleMinusThree(data)}\n${handleMinusFour(data)}\n${handleMinusFive(data)}\n${handleMinusSix(data)}
+\n**Time Played This Week:** ${data.grand_total_time}\n**Win Percentage:** ${winCount(data.grand_total_results)}%`
+        )}
+}
 
+const handleToday = (data) => {
+    console.log(data.today.total_time)
+    if (data.today.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**Today:** No games played.`
+    }
+    else {
+        return `**Today:** Played for ${data.today.total_time} -- Won ${winCount(data.today.results)}% of total games played.`}
+}
+
+const handleYesterday = (data) => {
+    if (data.minus_one.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**Yesterday:** No games played.`
+    }
+    else {
+        return `**Yesterday:** ${data.minus_one.total_time} -- Won ${winCount(data.minus_one.results)}% of total games played.`
+    }
+}
+
+const handleMinusTwo = (data) => {
+    if (data.minus_two.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**${momentCommand(-2)}:** No games played.`
+    }
+    else {
+        return `**${momentCommand(-2)}:** ${data.minus_two.total_time} -- Won ${winCount(data.minus_two.results)}% of total games played`
+    }
+    
+}
+
+const handleMinusThree = (data) => {
+    if (data.minus_three.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**${momentCommand(-3)}:** No games played.`
+    }
+    else {
+        return `**${momentCommand(-3)}:** ${data.minus_three.total_time} -- Won ${winCount(data.minus_three.results)}% of total games played`
+    }
+}
+
+const handleMinusFour= (data) => {
+    if (data.minus_four.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**${momentCommand(-4)}:** No games played.`
+    }
+    else {
+        return `**${momentCommand(-4)}:** ${data.minus_four.total_time} -- Won ${winCount(data.minus_four.results)}% of total games played`
+    }
+    
+}
+
+const handleMinusFive = (data) => {
+    if (data.minus_five.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**${momentCommand(-5)}:** No games played.`
+    }
+    else {
+        return `**${momentCommand(-5)}:** ${data.minus_five.total_time} -- Won ${winCount(data.minus_five.results)}% of total games played`
+    }
+    
+}
+
+const handleMinusSix = (data) => {
+    if (data.minus_six.total_time === "00 hours 00 minutes and 00 seconds"){
+        return `**${momentCommand(-6)}:** No games played.`
+    }
+    else {
+        return `**${momentCommand(-6)}:** ${data.minus_six.total_time} -- Won ${winCount(data.minus_six.results)}% of total games played`
+    }
+}
+
+const winCount = (data) =>{
+  const gameTotal = data.length
+  const wonGames = data.filter(game => game=="Win").length
+  const percentage = wonGames/gameTotal
+
+  if (percentage){
     return Math.floor(percentage*100)
+  }
+  else 
+    return "0"
+
 
 }
 
