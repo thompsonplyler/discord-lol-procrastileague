@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
 const moment = require('moment');
+require('dotenv').config()
 
 const client = new Discord.Client();
 
@@ -170,6 +171,7 @@ const winCount = (data) => {
 };
 
 
-const botSecretToken = 'NjA2ODg3MDQxMjUwMzYxMzg4.XUSk_w.UpseijmJwkhGlryzoqtbu0BgVQA';
+const botSecretToken = 'NjA2ODg3MDQxMjUwMzYxMzg4.XYjccw.UnbJGyVNC4W97pWsX3roweZwHUI';
+console.log(process.env.TEST)
 
 client.login(botSecretToken);
