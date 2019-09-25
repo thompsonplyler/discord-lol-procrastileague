@@ -1,7 +1,10 @@
 ## PROCRASTILEAGUE -- The League of Legends Time Calculator Bot  
 Procrastileague is a very simple Discord bot with one purpose: to let you know how much time a user has spent playing League of Legends in the last week.
 
-To use Procrastileague, first add the bot to Discord.
+To use Procrastileague, first add the bot to a Discord server where you have permission to add bots.
+
+Procrastileague, by default, will work on any channel in a Discord server where it has been added.
+
 Next, enter the command:
 ```
 $timer <region> <username>
