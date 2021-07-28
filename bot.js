@@ -71,7 +71,7 @@ const timerCommand = (region, argument, receivedMessage) => {
   argument = encodeURIComponent(argument);
 
   if (argument.length > 0) {
-    fetch(`http://localhost:3001/api/v1/timer/?summoner_name=${argument}&region=${region}`, {
+    fetch(`https://fresh-under-one-sky-email-api.herokuapp.com/api/v1/timer/?summoner_name=${argument}&region=${region}`, {
       method: 'POST'
     })
       .then(r => r.json())
